@@ -112,7 +112,7 @@ def end_conditon(L,L_old):
 	row,col = len(L),len(L[0])
 	for i in xrange(0,row):
 		for j in xrange(0,col):
-			total_error += delta(L[i][j] - L_old[i][j])
+			total_error += delta(L[i][j], L_old[i][j])
 	error_frac = float(total_error/float(row*col))
 	last_six = [last_six[1],last_six[2],last_six[3],last_six[4],last_six[5],error_frac]
 	print error_frac,'error_frac'
