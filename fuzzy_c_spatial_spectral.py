@@ -23,7 +23,7 @@ fuzzy_index_prev = 1.3
 neg_dist = 0
 cluster_number = 6
 cluster_color = {0:[255,255,0],1:[128,255,0],2:[0,128,255],3:[255,0,255],4:[255,0,0],5:[0,0,0]}
-image_path = "test_new.jpeg"
+image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_TOA_REFLECTANCE_07_SPBIN.tif"
 maxconn=8
 pool=threading.BoundedSemaphore(value=maxconn)
 dist_mat = []
@@ -37,18 +37,18 @@ def calculate_fuzzy_index(itertion_number,h,fxkyk):
 
 def get_data_from_image():
 	global image_path
-	M = np.asarray(Image.open(image_path))
-	# dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
-	# col = dataset.RasterXSize
-	# row = dataset.RasterYSize
-	# # print dataset.RasterCount
-	# a = [[[]for y in xrange(col)] for z in xrange(row)]
-	# for i in xrange(1,dataset.RasterCount + 1):
-	# 	band = dataset.GetRasterBand(i).ReadAsArray()
-	# 	for m in xrange(0,row):
-	# 		for n in xrange(0,col):
-	# 			a[m][n].append(band[m][n])
-	# M = np.array(a,dtype='uint16')
+	# M = np.asarray(Image.open(image_path))
+	dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
+	col = dataset.RasterXSize
+	row = dataset.RasterYSize
+	# print dataset.RasterCount
+	a = [[[]for y in xrange(col)] for z in xrange(row)]
+	for i in xrange(1,dataset.RasterCount + 1):
+		band = dataset.GetRasterBand(i).ReadAsArray()
+		for m in xrange(0,row):
+			for n in xrange(0,col):
+				a[m][n].append(band[m][n])
+	M = np.array(a,dtype='uint16')
 	image_name = image_path.split(".")[0]
 	f = open("data_"+str(image_name)+".pickle","wb")
 	# f = open("data_test.pickle","wb")
