@@ -300,7 +300,7 @@ def get_L(U):
 
 def fuzzy_cluster(cluster_number):
 	data = get_data_from_pickle()
-	print data,'data'
+	# print data,'data'
 	row = len(data)
 	col = len(data[0])
 	itertion_number = 1
@@ -314,7 +314,7 @@ def fuzzy_cluster(cluster_number):
 	L_new = get_L(U)
 	L = normalise_U(U,L)
 	save_image_from_L(L,itertion_number)
-	print L,'L'
+	# print L,'L'
 	while True:
 		cluster_centres = get_cluster_ref(U,data,cluster_centres,v_denom)
 		print cluster_centres,'cluster_centres'
