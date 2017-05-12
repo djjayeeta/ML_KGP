@@ -6,6 +6,9 @@ from math import exp, expm1,pow,sqrt
 from multiprocessing import Pool
 from datetime import datetime
 import timeit
+import threading
+import urllib2
+import time, random
 
 
 MAX = 1000.0
@@ -19,7 +22,11 @@ fuzzy_index = 1.3
 fuzzy_index_prev = 1.3
 neg_dist = 0
 cluster_number = 6
-image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.tif"
+cluster_color = {0:[255,0,0],1:[0,255,0],2:[0,0,255],3:[0,0,0]}
+image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_TOA_REFLECTANCE_07_SPBIN.tif"
+maxconn=3
+pool=threading.BoundedSemaphore(value=maxconn)
+dist_mat = []
 
 
 def calculate_fuzzy_index(itertion_number,h,fxkyk):
@@ -30,7 +37,6 @@ def calculate_fuzzy_index(itertion_number,h,fxkyk):
 
 def get_data_from_image():
 	global image_path
-	# image_path = "test.jpeg"
 	# M = np.asarray(Image.open(image_path))
 	dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
 	col = dataset.RasterXSize
@@ -50,9 +56,10 @@ def get_data_from_image():
 	f.close()
 
 def create_image():
-	row = 100
-	col = 100
+	row = 50
+	col = 50
 	channel = 3
+	global image_path
 	a = [[[0 for x in xrange(0,channel)]for y in xrange(0,col)] for z in xrange(0,row)]
 	for x in xrange(0,row):
 		for y in xrange(0,col):
@@ -66,7 +73,7 @@ def create_image():
 				a[x][y] = [0,0,0]
 	a = np.array(a,dtype='uint8')
 	im = Image.fromarray(a)
-	im.save("test.jpeg")
+	im.save(image_path)
 
 
 def save_image_from_L(L,itertion_number):
@@ -77,10 +84,10 @@ def save_image_from_L(L,itertion_number):
 	a = [[[] for y in xrange(0,len(L[0]))] for z in xrange(0,len(L))]
 	for x in xrange(0,len(L)):
 		for y in xrange(0,len(L[0])):
-			# if L[x][y] == 0:
+			# if L[x][y] == 0:	
 			if L[x][y] < 0 :
 				print L[x][y]
-			a[x][y] = [255/L[x][y]+1,255/L[x][y]+1,255/L[x][y]+1]
+			a[x][y] = cluster_color[L[x][y]]
 			# elif L[x][y] == 1:
 			# 	a[x][y] = [0,255,0]
 			# elif L[x][y] == 2:
@@ -158,14 +165,15 @@ def get_alpha(itertion_number):
 	if avg < EpsilonAvg:
 		n0 = itertion_number	
 	x = (itertion_number - n0)/w
-	alpha = 0.2 / (0.1 + expm1(-x))
+	# print x,'x'
+	alpha = 0.2 / (0.1 + exp(-x))
 	return alpha
 
 
 def neigh_contri_by_point(sitex,sitey,pointx,pointy):
 	global Theta
 	dist = Theta*eu_distance([sitex,sitey],[pointx,pointy])
-	return float(1)/float(1+expm1(dist))
+	return float(1)/float(1+exp(dist))
 
 def cluster_spatial_dist(params):
 	sitex,sitey,cluster_index,U = params[0],params[1],params[2],params[3]
@@ -176,25 +184,30 @@ def cluster_spatial_dist(params):
 	for m in xrange(0,row):
 		for n in xrange(0,col):
 			betat = neigh_contri_by_point(sitex,sitey,n,m)
-			if not betat < 0.000001:
+			# print betat,'betat'
+			if not betat < 0.001:
+				# print betat,'betataccepted'
 				total += U[m][n][cluster_index] * betat
 	return total
 
+
 def spatial_dist_denom(sitex,sitey,U,itertion_number):
+	global maxconn
 	alpha = get_alpha(itertion_number)
+	# print alpha,'alpha'
 	if alpha >0.00002:
 		cluster_number = len(U[0][0])
 		cluster_spatial_arr = [0.0 for j in xrange(0,cluster_number)]
 		data_inputs = [[sitex,sitey,j,U] for j in xrange(0,cluster_number)]
-		#for j in xrange(0,cluster_number):
+		for j in xrange(0,cluster_number):
 
-		
-		pool = Pool(4) # on 4 processors
-		cluster_spatial_arr = pool.map(cluster_spatial_dist, data_inputs)
-		pool.close()
-		pool.join()
+		# pool=threading.BoundedSemaphore(value=maxconn)
+		# pool = Pool(4) # on 4 processors
+		# cluster_spatial_arr = pool.map(cluster_spatial_dist, data_inputs)
+		# pool.close()
+		# pool.join()
 
-		#	cluster_spatial_arr[j] = cluster_spatial_dist(data_inputs[j])
+			cluster_spatial_arr[j] = cluster_spatial_dist(data_inputs[j])
 		return cluster_spatial_arr,alpha
 	return [],0
 
@@ -240,14 +253,39 @@ def get_cluster_ref(U,data,v,v_denom):
 	return v
 
 def calculate_distance(params):
+	global dist_mat
+	# print dist_mat
 	n,m,U,itertion_number,data,cluster_centres = params[0],params[1],params[2],params[3],params[4],params[5]
-	print n,m
+	# print n,m
 	cluster_number = len(cluster_centres)
 	cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
-	dist = [0 for i in xrange(0,cluster_number)]
 	for r in xrange(0,cluster_number):
-		dist[r] = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
-	return dist
+		dist = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
+		# if dist != dist_mat[m][n][r]:
+		# 	print 'yes',m,n,r
+		dist_mat[m][n][r] = dist
+
+class GrabUrl(threading.Thread):
+    def __init__(self, arg0):
+        threading.Thread.__init__(self)
+        self.params = arg0
+    def run(self):
+        # k=random.randint(10,20)
+        # print "Processing " + self.host + " waiting for : " + str(k)
+        # time.sleep(k)
+        # print "exiting " + self.host
+        calculate_distance(self.params)
+        pool.release()
+
+class Handler(threading.Thread):
+	def run(self):
+		global pool
+		data_inputs = self._Thread__kwargs['data_inputs']
+		for i in xrange(0,len(data_inputs)):
+			pool.acquire()
+			graburl = GrabUrl(data_inputs[i])
+			graburl.setDaemon(True)
+			graburl.start()
 
 def update_U(U,data,itertion_number,cluster_centres,dist_mat):
 	global neg_dist,fuzzy_index
@@ -255,33 +293,40 @@ def update_U(U,data,itertion_number,cluster_centres,dist_mat):
 	col = len(data[0])
 	cluster_number = len(cluster_centres)
 	k = 0
-	#data_inputs = [[] for i in xrange(0,row*col)]
-	#for m in xrange(0,row):
-	#	for n in xrange(0,col):
-	#		data_inputs[m*n+n] = [n,m,U,itertion_number,data,cluster_centres]
+	data_inputs = [[] for i in xrange(0,row*col)]
+	for m in xrange(0,row):
+		for n in xrange(0,col):
+			# print dist_mat[m][n]
+			# time.sleep(1)
+			data_inputs[(m*col)+n] = [n,m,U,itertion_number,data,cluster_centres]
+	handler = Handler(kwargs={'data_inputs':data_inputs})
+	handler.start()
+	handler.join()
+	# cluster_spatial_arr
 
 	#pool = Pool(4) # on 4 processors
 	#outputs = pool.map(calculate_distance, data_inputs)
 	#pool.close()
 	#pool.join()
 	
-	for m in xrange(0,row):
-		for n in xrange(0,col):
-			#dist_mat[m][n] = outputs[m*n+n] 
+	# for m in xrange(0,row):
+	# 	for n in xrange(0,col):
+	# 		#dist_mat[m][n] = outputs[m*n+n] 
 		
 
 
-			cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
-			for r in xrange(0,cluster_number):
-				k += 1
-				dist = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
-				if k%1000 == 0:
-				# if k == 2000:
-					# return
-					print 'dist',k
-				dist_mat[m][n][r] = dist
+	# 		cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
+	# 		for r in xrange(0,cluster_number):
+	# 			k += 1
+	# 			dist = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
+	# 			if k%1000 == 0:
+	# 			# if k == 2000:
+	# 				# return
+	# 				print 'dist',k
+	# 			dist_mat[m][n][r] = dist
 	for m in xrange(0,row):
 		for n in xrange(0,col):
+			# print dist_mat[m][n]
 			indices = [i for i in xrange(0,cluster_number) if dist_mat[m][n][i] <= neg_dist ]
 			for r in xrange(0,cluster_number):
 				if indices and r in indices:
@@ -301,6 +346,7 @@ def get_L(U):
 
 
 def fuzzy_cluster(cluster_number):
+	global dist_mat
 	data = get_data_from_pickle()
 	# print data,'data'
 	row = len(data)
@@ -309,7 +355,7 @@ def fuzzy_cluster(cluster_number):
 	U = initialise_U(data,cluster_number)
 	dist_mat = [[[0.0 for x in xrange(0,cluster_number)] for y in xrange(0,col)] for z in xrange(0,row)]
 	dist_mat = np.array(dist_mat)
-	print U,'U'
+	# print U,'U'
 	cluster_centres = [[0.0 for y in xrange(len(data[0][0]))] for x in xrange(0,cluster_number)]
 	v_denom = [0.0 for x in xrange(0,cluster_number)]
 	L = get_L(U)
@@ -322,7 +368,8 @@ def fuzzy_cluster(cluster_number):
 		print cluster_centres,'cluster_centres'
 		U = update_U(U,data,itertion_number,cluster_centres,dist_mat)
 		# return
-		print U,'U'
+		# print U,'U'
+		print itertion_number,'itertion_number'
 		L_new = normalise_U(U,L_new)
 		to_end = end_conditon(L_new,L)
 		L = np.array(L_new, copy=True)
@@ -339,11 +386,11 @@ def run_fuzzy():
 	image_name = image_path.split(".")[0]
 	# create_image()
 	# start_time = timeit.default_timer()
-	#get_data_from_image()
+	get_data_from_image()
 	get_data_from_pickle()
 	L = fuzzy_cluster(cluster_number)
 	# print(timeit.default_timer() - start_time)
-	print L
+	# print L
 
 	f = open("seg_"+image_name+".pickle","wb")
 	pickle.dump(L, f)
