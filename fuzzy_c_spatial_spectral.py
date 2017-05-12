@@ -1,8 +1,11 @@
 from osgeo import gdal
 import numpy as np
-import pickle,random
+import pickle,random,os
 from PIL import Image
 from math import exp, expm1,pow,sqrt
+from multiprocessing import Pool
+from datetime import datetime
+import timeit
 
 
 MAX = 1000.0
@@ -12,29 +15,37 @@ Theta = 0.7
 n0 = 40
 last_six = [0,0,0,0,0,0]
 w = 0.9
-fuzzy_index = 1.5
+fuzzy_index = 1.3
+fuzzy_index_prev = 1.3
 neg_dist = 0
-cluster_number = 4
+cluster_number = 6
+image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.tif"
+
+
+def calculate_fuzzy_index(itertion_number,h,fxkyk):
+	fuzzy_index = fuzzy_index_prev + h*fxkyk
+	fuzzy_index_prev = fuzzy_index
+	return fuzzy_index
+
 
 def get_data_from_image():
-	# image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.tif"
-	image_path = "test.jpeg"
-	M = np.asarray(Image.open(image_path))
-
-
-
-	# dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
-	# col = dataset.RasterXSize
-	# row = dataset.RasterYSize
-	# a = [[[]for y in xrange(col)] for z in xrange(row)]
-	# for i in xrange(1,dataset.RasterCount + 1):
-	# 	band = dataset.GetRasterBand(i).ReadAsArray()
-	# 	for m in xrange(0,row):
-	# 		for n in xrange(0,col):
-	# 			a[m][n].append(band[m][n])
-	# M = np.array(a,dtype='uint16')
-	# f = open("data_IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.pickle","wb")
-	f = open("data_test.pickle","wb")
+	global image_path
+	# image_path = "test.jpeg"
+	# M = np.asarray(Image.open(image_path))
+	dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
+	col = dataset.RasterXSize
+	row = dataset.RasterYSize
+	print dataset.RasterCount
+	a = [[[]for y in xrange(col)] for z in xrange(row)]
+	for i in xrange(1,dataset.RasterCount + 1):
+		band = dataset.GetRasterBand(i).ReadAsArray()
+		for m in xrange(0,row):
+			for n in xrange(0,col):
+				a[m][n].append(band[m][n])
+	M = np.array(a,dtype='uint16')
+	image_name = image_path.split(".")[0]
+	f = open("data_"+str(image_name)+".pickle","wb")
+	# f = open("data_test.pickle","wb")
 	pickle.dump(M, f)
 	f.close()
 
@@ -57,28 +68,36 @@ def create_image():
 	im = Image.fromarray(a)
 	im.save("test.jpeg")
 
+
 def save_image_from_L(L,itertion_number):
-	global cluster_number
+	global cluster_number,image_path
+	image_name = image_path.split(".")[0]
+	if not os.path.exists(image_name):
+		os.makedirs(image_name)
 	a = [[[] for y in xrange(0,len(L[0]))] for z in xrange(0,len(L))]
 	for x in xrange(0,len(L)):
 		for y in xrange(0,len(L[0])):
-			if L[x][y] == 0:
-				a[x][y] = [255,0,0]
-			elif L[x][y] == 1:
-				a[x][y] = [0,255,0]
-			elif L[x][y] == 2:
-				a[x][y] = [0,0,255]
-			elif L[x][y] == 3:
-				a[x][y] = [0,0,0]
-			else:
-				print "invalid L value",L[x][y]
+			# if L[x][y] == 0:
+			if L[x][y] < 0 :
+				print L[x][y]
+			a[x][y] = [255/L[x][y]+1,255/L[x][y]+1,255/L[x][y]+1]
+			# elif L[x][y] == 1:
+			# 	a[x][y] = [0,255,0]
+			# elif L[x][y] == 2:
+			# 	a[x][y] = [0,0,255]
+			# elif L[x][y] == 3:
+			# 	a[x][y] = [0,0,0]
+			# else:
+			# 	print "invalid L value",L[x][y]
 	a = np.array(a,dtype='uint8')
 	im = Image.fromarray(a)
-	im.save("test_"+str(itertion_number)+".jpeg")
+	im.save(image_name+"/"+image_name+"_"+str(itertion_number)+".jpeg")
 
 def get_data_from_pickle():
+	global image_path
+	image_name = image_path.split(".")[0]
 	# f = open("data_IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.pickle","r")
-	f = open("data_test.pickle","r")
+	f = open("data_"+image_name+".pickle","r")
 	irrad = pickle.load(f)
 	f.close()
 	return irrad
@@ -148,10 +167,12 @@ def neigh_contri_by_point(sitex,sitey,pointx,pointy):
 	dist = Theta*eu_distance([sitex,sitey],[pointx,pointy])
 	return float(1)/float(1+expm1(dist))
 
-def cluster_spatial_dist(sitex,sitey,cluster_index,U):
+def cluster_spatial_dist(params):
+	sitex,sitey,cluster_index,U = params[0],params[1],params[2],params[3]
 	total = 0.0
 	row = len(U)
 	col = len(U[0])
+	# print cluster_index
 	for m in xrange(0,row):
 		for n in xrange(0,col):
 			betat = neigh_contri_by_point(sitex,sitey,n,m)
@@ -160,19 +181,24 @@ def cluster_spatial_dist(sitex,sitey,cluster_index,U):
 	return total
 
 def spatial_dist_denom(sitex,sitey,U,itertion_number):
-	cluster_number = len(U[0][0])
-	cluster_spatial_arr = [0.0 for j in xrange(0,cluster_number)]
-	for j in xrange(0,cluster_number):
-		cluster_spatial_arr[j] = cluster_spatial_dist(sitex,sitey,j,U)
 	alpha = get_alpha(itertion_number)
-	return cluster_spatial_arr,alpha
+	if alpha >0.00002:
+		cluster_number = len(U[0][0])
+		cluster_spatial_arr = [0.0 for j in xrange(0,cluster_number)]
+		data_inputs = [[sitex,sitey,j,U] for j in xrange(0,cluster_number)]
+		# for j in xrange(0,cluster_number):
+
+		
+		pool = Pool(4) # on 4 processors
+		cluster_spatial_arr = pool.map(cluster_spatial_dist, data_inputs)
+		pool.close()
+		pool.join()
+
+			# cluster_spatial_arr[j] = cluster_spatial_dist(data_inputs[j])
+		return cluster_spatial_arr,alpha
+	return [],0
 
 def spatial_distance(cluster_index,cluster_spatial_arr,alpha):
-	# cluster_number = len(U[0][0])
-	# cluster_spatial_arr = [0.0 for j in xrange(0,cluster_number)]
-	# for j in xrange(0,cluster_number):
-	# 	cluster_spatial_arr[j] = cluster_spatial_dist(sitex,sitey,j,U)
-	# alpha = get_alpha(itertion_number)
 	if sum(cluster_spatial_arr) == 0.0:
 		return 0
 	return alpha*(1.0 - float(cluster_spatial_arr[cluster_index]/sum(cluster_spatial_arr)))
@@ -213,19 +239,44 @@ def get_cluster_ref(U,data,v,v_denom):
 			v[k][l] /= v_denom[k]
 	return v
 
+def calculate_distance(params):
+	n,m,U,itertion_number,data,cluster_centres = params[0],params[1],params[2],params[3],params[4],params[5]
+	cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
+	dist = [0 for i in xrange(0,cluster_number)]
+	for r in xrange(0,cluster_number):
+		dist[r] = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
+	return dist
+
 def update_U(U,data,itertion_number,cluster_centres,dist_mat):
 	global neg_dist,fuzzy_index
 	row = len(data)
 	col = len(data[0])
 	cluster_number = len(cluster_centres)
 	k = 0
+	# data_inputs = [[] for i in xrange(0,row*col)]
 	for m in xrange(0,row):
 		for n in xrange(0,col):
+			# data_inputs[m*n+n] = [n,m,U,itertion_number,data,cluster_centres]
+
+	# pool = Pool(4) # on 4 processors
+	# outputs = pool.map(calculate_distance, data_inputs)
+	# pool.close()
+	# pool.join()
+	
+	# for m in xrange(0,row):
+	# 	for n in xrange(0,col):
+	# 		dist_mat[m][n] = outputs[m*n+n] 
+
+
+
 			cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
 			for r in xrange(0,cluster_number):
 				k += 1
 				dist = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
-				print 'dist',k
+				if k%100 == 0:
+				# if k == 2000:
+					# return
+					print 'dist',k
 				dist_mat[m][n][r] = dist
 	for m in xrange(0,row):
 		for n in xrange(0,col):
@@ -262,12 +313,13 @@ def fuzzy_cluster(cluster_number):
 	L = get_L(U)
 	L_new = get_L(U)
 	L = normalise_U(U,L)
-	# save_image_from_L(L,itertion_number)
+	save_image_from_L(L,itertion_number)
 	print L,'L'
 	while True:
 		cluster_centres = get_cluster_ref(U,data,cluster_centres,v_denom)
 		print cluster_centres,'cluster_centres'
 		U = update_U(U,data,itertion_number,cluster_centres,dist_mat)
+		# return
 		print U,'U'
 		L_new = normalise_U(U,L_new)
 		to_end = end_conditon(L_new,L)
@@ -280,12 +332,18 @@ def fuzzy_cluster(cluster_number):
 	return L
 
 def run_fuzzy():
-	global cluster_number
+
+	global cluster_number,image_path
+	image_name = image_path.split(".")[0]
 	# create_image()
+	# start_time = timeit.default_timer()
 	# get_data_from_image()
+	get_data_from_pickle()
 	L = fuzzy_cluster(cluster_number)
+	# print(timeit.default_timer() - start_time)
 	print L
-	f = open("seg_test.pickle","wb")
+
+	f = open("seg_"+image_name+".pickle","wb")
 	pickle.dump(L, f)
 	f.close()
 
