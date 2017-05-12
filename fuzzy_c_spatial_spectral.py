@@ -22,7 +22,7 @@ fuzzy_index = 1.3
 fuzzy_index_prev = 1.3
 neg_dist = 0
 cluster_number = 6
-cluster_color = {0:[255,0,0],1:[0,255,0],2:[0,0,255],3:[0,0,0]}
+cluster_color = {0:[255,255,0],1:[128,255,0],2:[0,128,255],3:[255,0,255],4:[255,0,0],5:[0,0,0]}
 image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_TOA_REFLECTANCE_07_SPBIN.tif"
 maxconn=3
 pool=threading.BoundedSemaphore(value=maxconn)
