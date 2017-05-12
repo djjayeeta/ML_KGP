@@ -186,7 +186,7 @@ def spatial_dist_denom(sitex,sitey,U,itertion_number):
 		cluster_number = len(U[0][0])
 		cluster_spatial_arr = [0.0 for j in xrange(0,cluster_number)]
 		data_inputs = [[sitex,sitey,j,U] for j in xrange(0,cluster_number)]
-		# for j in xrange(0,cluster_number):
+		#for j in xrange(0,cluster_number):
 
 		
 		pool = Pool(4) # on 4 processors
@@ -194,7 +194,7 @@ def spatial_dist_denom(sitex,sitey,U,itertion_number):
 		pool.close()
 		pool.join()
 
-			# cluster_spatial_arr[j] = cluster_spatial_dist(data_inputs[j])
+		#	cluster_spatial_arr[j] = cluster_spatial_dist(data_inputs[j])
 		return cluster_spatial_arr,alpha
 	return [],0
 
@@ -241,6 +241,8 @@ def get_cluster_ref(U,data,v,v_denom):
 
 def calculate_distance(params):
 	n,m,U,itertion_number,data,cluster_centres = params[0],params[1],params[2],params[3],params[4],params[5]
+	print n,m
+	cluster_number = len(cluster_centres)
 	cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
 	dist = [0 for i in xrange(0,cluster_number)]
 	for r in xrange(0,cluster_number):
@@ -253,27 +255,27 @@ def update_U(U,data,itertion_number,cluster_centres,dist_mat):
 	col = len(data[0])
 	cluster_number = len(cluster_centres)
 	k = 0
-	# data_inputs = [[] for i in xrange(0,row*col)]
+	#data_inputs = [[] for i in xrange(0,row*col)]
+	#for m in xrange(0,row):
+	#	for n in xrange(0,col):
+	#		data_inputs[m*n+n] = [n,m,U,itertion_number,data,cluster_centres]
+
+	#pool = Pool(4) # on 4 processors
+	#outputs = pool.map(calculate_distance, data_inputs)
+	#pool.close()
+	#pool.join()
+	
 	for m in xrange(0,row):
 		for n in xrange(0,col):
-			# data_inputs[m*n+n] = [n,m,U,itertion_number,data,cluster_centres]
-
-	# pool = Pool(4) # on 4 processors
-	# outputs = pool.map(calculate_distance, data_inputs)
-	# pool.close()
-	# pool.join()
-	
-	# for m in xrange(0,row):
-	# 	for n in xrange(0,col):
-	# 		dist_mat[m][n] = outputs[m*n+n] 
-
+			#dist_mat[m][n] = outputs[m*n+n] 
+		
 
 
 			cluster_spatial_arr,alpha = spatial_dist_denom(n,m,U,itertion_number)
 			for r in xrange(0,cluster_number):
 				k += 1
 				dist = eu_distance(data[m][n],cluster_centres[r]) + spatial_distance(r,cluster_spatial_arr,alpha)
-				if k%100 == 0:
+				if k%1000 == 0:
 				# if k == 2000:
 					# return
 					print 'dist',k
@@ -337,7 +339,7 @@ def run_fuzzy():
 	image_name = image_path.split(".")[0]
 	# create_image()
 	# start_time = timeit.default_timer()
-	# get_data_from_image()
+	#get_data_from_image()
 	get_data_from_pickle()
 	L = fuzzy_cluster(cluster_number)
 	# print(timeit.default_timer() - start_time)
