@@ -24,7 +24,7 @@ neg_dist = 0
 cluster_number = 6
 cluster_color = {0:[255,255,0],1:[128,255,0],2:[0,128,255],3:[255,0,255],4:[255,0,0],5:[0,0,0]}
 image_path = "IMS1_HYSI_GEO_114_05FEB2009_S1_TOA_REFLECTANCE_07_SPBIN.tif"
-maxconn=3
+maxconn=8
 pool=threading.BoundedSemaphore(value=maxconn)
 dist_mat = []
 
@@ -41,7 +41,7 @@ def get_data_from_image():
 	dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
 	col = dataset.RasterXSize
 	row = dataset.RasterYSize
-	print dataset.RasterCount
+	# print dataset.RasterCount
 	a = [[[]for y in xrange(col)] for z in xrange(row)]
 	for i in xrange(1,dataset.RasterCount + 1):
 		band = dataset.GetRasterBand(i).ReadAsArray()
@@ -288,7 +288,7 @@ class Handler(threading.Thread):
 			graburl.start()
 
 def update_U(U,data,itertion_number,cluster_centres,dist_mat):
-	global neg_dist,fuzzy_index
+	global neg_dist,fuzzy_index,maxconn
 	row = len(data)
 	col = len(data[0])
 	cluster_number = len(cluster_centres)
@@ -299,19 +299,19 @@ def update_U(U,data,itertion_number,cluster_centres,dist_mat):
 			# print dist_mat[m][n]
 			# time.sleep(1)
 			data_inputs[(m*col)+n] = [n,m,U,itertion_number,data,cluster_centres]
-	handler = Handler(kwargs={'data_inputs':data_inputs})
-	handler.start()
-	handler.join()
+	# handler = Handler(kwargs={'data_inputs':data_inputs})
+	# handler.start()
+	# handler.join()
 	# cluster_spatial_arr
 
-	#pool = Pool(4) # on 4 processors
-	#outputs = pool.map(calculate_distance, data_inputs)
-	#pool.close()
-	#pool.join()
+	pool = Pool(maxconn) # on 4 processors
+	outputs = pool.map(calculate_distance, data_inputs)
+	pool.close()
+	pool.join()
 	
-	# for m in xrange(0,row):
-	# 	for n in xrange(0,col):
-	# 		#dist_mat[m][n] = outputs[m*n+n] 
+	for m in xrange(0,row):
+		for n in xrange(0,col):
+			dist_mat[m][n] = outputs[m*col+n] 
 		
 
 
