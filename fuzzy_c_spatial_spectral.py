@@ -2,14 +2,12 @@ from osgeo import gdal
 import numpy as np
 import pickle,random,os
 from PIL import Image
-from math import exp, expm1,pow,sqrt
+from math import exp,pow,sqrt
 from multiprocessing import Pool
 from datetime import datetime
 import timeit
 import threading
-import urllib2
-import time, random
-
+import time, random,sys
 
 MAX = 1000.0
 Epsilon = 0.0002
@@ -37,21 +35,21 @@ def calculate_fuzzy_index(itertion_number,h,fxkyk):
 
 def get_data_from_image():
 	global image_path
-	# M = np.asarray(Image.open(image_path))
-	dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
-	col = dataset.RasterXSize
-	row = dataset.RasterYSize
-	# print dataset.RasterCount
-	a = [[[]for y in xrange(col)] for z in xrange(row)]
-	for i in xrange(1,dataset.RasterCount + 1):
-		band = dataset.GetRasterBand(i).ReadAsArray()
-		for m in xrange(0,row):
-			for n in xrange(0,col):
-				a[m][n].append(band[m][n])
-	M = np.array(a,dtype='uint16')
+	if image_path.split(".")[1] == "tif":
+		dataset = gdal.Open(image_path,gdal.GA_ReadOnly)
+		col = dataset.RasterXSize
+		row = dataset.RasterYSize
+		a = [[[]for y in xrange(col)] for z in xrange(row)]
+		for i in xrange(1,dataset.RasterCount + 1):
+			band = dataset.GetRasterBand(i).ReadAsArray()
+			for m in xrange(0,row):
+				for n in xrange(0,col):
+					a[m][n].append(band[m][n])
+		M = np.array(a,dtype='uint16')
+	else:
+		M = np.asarray(Image.open(image_path))
 	image_name = image_path.split(".")[0]
 	f = open("data_"+str(image_name)+".pickle","wb")
-	# f = open("data_test.pickle","wb")
 	pickle.dump(M, f)
 	f.close()
 
@@ -76,26 +74,15 @@ def create_image():
 	im.save(image_path)
 
 
-def save_image_from_L(L,itertion_number):
+def save_image_from_L(L,itertion_number,datetime_str):
 	global cluster_number,image_path
 	image_name = image_path.split(".")[0]
-	if not os.path.exists(image_name):
-		os.makedirs(image_name)
+	if not os.path.exists(image_name+"_"+datetime_str):
+		os.makedirs(image_name+"_"+datetime_str)
 	a = [[[] for y in xrange(0,len(L[0]))] for z in xrange(0,len(L))]
 	for x in xrange(0,len(L)):
 		for y in xrange(0,len(L[0])):
-			# if L[x][y] == 0:	
-			if L[x][y] < 0 :
-				print L[x][y]
 			a[x][y] = cluster_color[L[x][y]]
-			# elif L[x][y] == 1:
-			# 	a[x][y] = [0,255,0]
-			# elif L[x][y] == 2:
-			# 	a[x][y] = [0,0,255]
-			# elif L[x][y] == 3:
-			# 	a[x][y] = [0,0,0]
-			# else:
-			# 	print "invalid L value",L[x][y]
 	a = np.array(a,dtype='uint8')
 	im = Image.fromarray(a)
 	im.save(image_name+"/"+image_name+"_"+str(itertion_number)+".jpeg")
@@ -103,7 +90,6 @@ def save_image_from_L(L,itertion_number):
 def get_data_from_pickle():
 	global image_path
 	image_name = image_path.split(".")[0]
-	# f = open("data_IMS1_HYSI_GEO_114_05FEB2009_S1_RADIANCE_07_SPBIN.pickle","r")
 	f = open("data_"+image_name+".pickle","r")
 	irrad = pickle.load(f)
 	f.close()
@@ -273,10 +259,6 @@ class GrabUrl(threading.Thread):
         threading.Thread.__init__(self)
         self.params = arg0
     def run(self):
-        # k=random.randint(10,20)
-        # print "Processing " + self.host + " waiting for : " + str(k)
-        # time.sleep(k)
-        # print "exiting " + self.host
         calculate_distance(self.params)
         pool.release()
 
@@ -348,7 +330,7 @@ def get_L(U):
 	return L
 
 
-def fuzzy_cluster(cluster_number):
+def fuzzy_cluster(cluster_number,datetime_str):
 	global dist_mat
 	data = get_data_from_pickle()
 	# print data,'data'
@@ -364,7 +346,7 @@ def fuzzy_cluster(cluster_number):
 	L = get_L(U)
 	L_new = get_L(U)
 	L = normalise_U(U,L)
-	save_image_from_L(L,itertion_number)
+	save_image_from_L(L,itertion_number,datetime_str)
 	# print L,'L'
 	while True:
 		cluster_centres = get_cluster_ref(U,data,cluster_centres,v_denom)
@@ -377,27 +359,27 @@ def fuzzy_cluster(cluster_number):
 		to_end = end_conditon(L_new,L)
 		L = np.array(L_new, copy=True)
 		itertion_number += 1
-		save_image_from_L(L,itertion_number)
+		save_image_from_L(L,itertion_number,datetime_str)
 		if to_end:
 			break
 	L = normalise_U(U,L)
 	return L
 
 def run_fuzzy():
-
-	global cluster_number,image_path
-	image_name = image_path.split(".")[0]
+	datetime_str = str(datetime.now())
+	global cluster_number
 	# create_image()
-	# start_time = timeit.default_timer()
+	start_time = timeit.default_timer()
 	get_data_from_image()
 	get_data_from_pickle()
-	L = fuzzy_cluster(cluster_number)
-	# print(timeit.default_timer() - start_time)
+	L = fuzzy_cluster(cluster_number,datetime_str)
+	print(timeit.default_timer() - start_time),"total execution time"
 	# print L
 
 	f = open("seg_"+image_name+".pickle","wb")
 	pickle.dump(L, f)
 	f.close()
 
+image_path = sys.argv[1]
 run_fuzzy()
 
