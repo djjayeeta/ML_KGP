@@ -31,6 +31,7 @@ def save_pickle_from_image(image_path):
 				for n in xrange(0,col):
 					a[m][n].append(band[m][n])
 		M = np.array(a,dtype='uint16')
+		M = M.astype(np.float64)
 	else:
 		M = np.asarray(Image.open(image_path),dtype=np.float64)
 		print M.shape
@@ -138,8 +139,14 @@ cdef double get_alpha(int itertion_number,int n0,double [:] last_six,double w,do
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef double neigh_contri_by_point(int sitex,int sitey,int pointx,int pointy,double Theta) nogil:
-	cdef double dist,dist_ret
-	dist = Theta*(((sitex-pointx)**2) + ((sitey-pointy)**2))**0.5
+	cdef double dist,dist_ret,x_dist,y_dist
+	x_dist = sitex - pointx 
+	y_dist = sitey - pointy
+	if x_dist < 0:
+		x_dist = pointx - sitex 
+	if y_dist < 0:
+		y_dist = pointy - sitey
+	dist = Theta*(x_dist + y_dist)
 	dist_ret = 1/float(1+(2.71828183**dist))
 	return dist_ret
 
