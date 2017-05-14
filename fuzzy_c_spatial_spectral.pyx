@@ -225,7 +225,7 @@ def update_U(double[:,:,:] U,double[:,:,:] data,int itertion_number,double [:,:]
 
 	cdef int i, j
 	n0 = get_n0(n0,last_six,EpsilonAvg,itertion_number)
-	with nogil,parallel(num_threads=4):
+	with nogil,parallel(num_threads=8):
 		for i in prange(row,schedule = 'dynamic'):
 			for j in prange(col):
 				calculate_distance(j,i,itertion_number,cluster_number,U,data,cluster_centres,dist_mat,n0,last_six,w,EpsilonAvg,cluster_spatial_arr,Theta)
@@ -272,7 +272,7 @@ def fuzzy_cluster(image_path,datetime_str):
 	fuzzy_index = 1.3
 	fuzzy_index_prev = 1.3
 	neg_dist = 0
-	cluster_number = 4
+	cluster_number = 6
 	cluster_color = {0:[255,255,0],1:[128,255,0],2:[0,128,255],3:[255,0,255],4:[255,0,0],5:[0,0,0]}
 	maxconn=8
 	itertion_number = 1
