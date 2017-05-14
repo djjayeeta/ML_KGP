@@ -277,7 +277,7 @@ def fuzzy_cluster(image_path,datetime_str):
 	maxconn=8
 	itertion_number = 1
 	data = get_data_from_pickle(image_path)
-	print data
+	# print data
 	row = len(data)
 	col = len(data[0])
 	channel = len(data[0][0])
@@ -307,7 +307,7 @@ def fuzzy_cluster(image_path,datetime_str):
 
 def run_fuzzy(image_path):
 	datetime_str = str(datetime.now()).replace(" ","")
-	create_image(image_path)
+	# create_image(image_path)
 	image_name = image_path.split(".")[0]
 	start_time = timeit.default_timer()
 	save_pickle_from_image(image_path)
