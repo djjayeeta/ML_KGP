@@ -31,6 +31,7 @@ def save_pickle_from_image(image_path):
 				for n in xrange(0,col):
 					a[m][n].append(band[m][n])
 		M = np.array(a,dtype='uint16')
+		M = M.astype(np.float64)
 	else:
 		M = np.asarray(Image.open(image_path),dtype=np.float64)
 		print M.shape
@@ -138,8 +139,14 @@ cdef double get_alpha(int itertion_number,int n0,double [:] last_six,double w,do
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef double neigh_contri_by_point(int sitex,int sitey,int pointx,int pointy,double Theta) nogil:
-	cdef double dist,dist_ret
-	dist = Theta*(((sitex-pointx)**2) + ((sitey-pointy)**2))**0.5
+	cdef double dist,dist_ret,x_dist,y_dist
+	x_dist = sitex - pointx 
+	y_dist = sitey - pointy
+	if x_dist < 0:
+		x_dist = pointx - sitex 
+	if y_dist < 0:
+		y_dist = pointy - sitey
+	dist = Theta*(x_dist + y_dist)
 	dist_ret = 1/float(1+(2.71828183**dist))
 	return dist_ret
 
@@ -225,7 +232,7 @@ def update_U(double[:,:,:] U,double[:,:,:] data,int itertion_number,double [:,:]
 
 	cdef int i, j
 	n0 = get_n0(n0,last_six,EpsilonAvg,itertion_number)
-	with nogil,parallel(num_threads=4):
+	with nogil,parallel(num_threads=8):
 		for i in prange(row,schedule = 'dynamic'):
 			for j in prange(col):
 				calculate_distance(j,i,itertion_number,cluster_number,U,data,cluster_centres,dist_mat,n0,last_six,w,EpsilonAvg,cluster_spatial_arr,Theta)
@@ -272,12 +279,12 @@ def fuzzy_cluster(image_path,datetime_str):
 	fuzzy_index = 1.3
 	fuzzy_index_prev = 1.3
 	neg_dist = 0
-	cluster_number = 4
+	cluster_number = 6
 	cluster_color = {0:[255,255,0],1:[128,255,0],2:[0,128,255],3:[255,0,255],4:[255,0,0],5:[0,0,0]}
 	maxconn=8
 	itertion_number = 1
 	data = get_data_from_pickle(image_path)
-	print data
+	# print data
 	row = len(data)
 	col = len(data[0])
 	channel = len(data[0][0])
@@ -307,7 +314,7 @@ def fuzzy_cluster(image_path,datetime_str):
 
 def run_fuzzy(image_path):
 	datetime_str = str(datetime.now()).replace(" ","")
-	create_image(image_path)
+	# create_image(image_path)
 	image_name = image_path.split(".")[0]
 	start_time = timeit.default_timer()
 	save_pickle_from_image(image_path)
