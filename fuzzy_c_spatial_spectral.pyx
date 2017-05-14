@@ -293,7 +293,6 @@ def fuzzy_cluster(image_path,datetime_str):
 	while True:
 		cluster_centres = get_cluster_ref(U,data,cluster_centres,v_denom,fuzzy_index,row,col,cluster_number,channel)
 		print cluster_centres,'cluster_centres'
-
 		U,n0 = update_U(U,data,itertion_number,cluster_centres,dist_mat,row,col,cluster_number,channel,fuzzy_index,neg_dist,maxconn,n0,last_six,w,EpsilonAvg,cluster_spatial_arr,Theta)
 		print itertion_number,'itertion_number'
 		L_new = segment_image(U,L_new,row,col,cluster_number)
@@ -314,11 +313,7 @@ def run_fuzzy(image_path):
 	save_pickle_from_image(image_path)
 	L = fuzzy_cluster(image_path,datetime_str)
 	print(timeit.default_timer() - start_time),"total execution time"
-	# print L
 	f = open("seg_"+image_name+".pickle","wb")
 	pickle.dump(L, f)
 	f.close()
-
-# image_path = sys.argv[1]
-# run_fuzzy(image_path)
 
