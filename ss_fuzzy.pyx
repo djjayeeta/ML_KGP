@@ -94,20 +94,20 @@ cdef void compute_cluster_distances(double [:,:,:] U,double [:,:] V,double [:,:,
 
 	return 
 
-
-
+@boundscheck(False)
+@wraparound(False)
 def get_dissimilarity_matrix(double [:,:,:]U,double [:,:]V,double [:,:,:]X,n,error_list):
 	cdef int row_size = X.shape[0]
 	cdef int col_size = X.shape[1]
 	cdef int channel_count = X.shape[2]
 	cdef double alpha = get_alpha(n,error_list)
-	cdef int i = 0,j = 0
+	cdef int i = 0,j = 0,k = 0,l = 0
 	cdef int cluster_number = V.shape[0]
-	cdef double [:,:,:] D = np.zeros((row_size,col_size,cluster_number))
+	cdef double [:,:,:] D = np.zeros((row_size,col_size,cluster_number)) 
+	cdef int [:,:] index_arr = np.array([[k,l] for k in xrange(row_size) for l in xrange(col_size)],dtype='int32')
 	with nogil,parallel(num_threads = 4):
-		for i in prange(row_size, schedule = "dynamic"):
-			for j in prange(col_size, schedule = "dynamic"):
-				compute_cluster_distances(U,V,X,D,i,j,row_size,col_size,cluster_number,channel_count,alpha)
+		for i in prange(row_size*col_size, schedule = "static"):
+			compute_cluster_distances(U,V,X,D,index_arr[i][0],index_arr[i][1],row_size,col_size,cluster_number,channel_count,alpha)
 	return np.array(D)
 
 def update_U(U,D,m):
