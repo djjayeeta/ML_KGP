@@ -105,7 +105,7 @@ def get_dissimilarity_matrix(double [:,:,:]U,double [:,:]V,double [:,:,:]X,n,err
 	cdef int cluster_number = V.shape[0]
 	cdef double [:,:,:] D = np.zeros((row_size,col_size,cluster_number)) 
 	cdef int [:,:] index_arr = np.array([[k,l] for k in xrange(row_size) for l in xrange(col_size)],dtype='int32')
-	with nogil,parallel(num_threads = 4):
+	with nogil,parallel(num_threads = 8):
 		for i in prange(row_size*col_size, schedule = "static"):
 			compute_cluster_distances(U,V,X,D,index_arr[i][0],index_arr[i][1],row_size,col_size,cluster_number,channel_count,alpha)
 	return np.array(D)
