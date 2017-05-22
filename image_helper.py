@@ -37,7 +37,8 @@ def get_pickle_object_as_numpy(pickle_object_path):
 	return picke_data
 
 def save_image(L,output_path):
-	cluster_color = cluster_color = [[255,255,0],[128,255,0],[0,128,255],[255,0,255],[255,0,0],[0,0,0]]
+	#cluster_color = cluster_color = [[255,255,0],[128,255,0],[0,128,255],[255,0,255],[255,0,0],[0,0,0]]
+	cluster_color = [[255,255,0],[128,255,0],[0,128,255],[255,0,255],[255,0,0],[0,0,0],[255,128,0],[0,255,128],[0,255,255],[127,0,255],[255,0,127],[128,128,128],[0,51,0],[102,0,0],[255,255,255],[204,229,255]]
 	a = [[[] for y in xrange(0,len(L[0]))] for z in xrange(0,len(L))]
 	for x in xrange(0,len(L)):
 		for y in xrange(0,len(L[0])):
