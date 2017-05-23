@@ -10,6 +10,8 @@ ASCII/
 *.jpeg
 *.p
 *.pyc
+*.tif
+*.mat
 .ipynb_checkpoints/
 Untitled.ipynb
 asd.pyx
