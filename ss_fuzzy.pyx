@@ -170,6 +170,7 @@ def segment(pickle_data_file,cluster_number,output_path):
 	n = 1
 	while(True):
 		V = get_cluster_prototypes(U,data,m,cluster_number)
+		ih.save_output(L_new,V,output_path + "_" + str(n) + ".pickle")
 		D = get_dissimilarity_matrix(U,V,data,n,error_list)
 		update_U(U,D,m)
 		L = L_new
