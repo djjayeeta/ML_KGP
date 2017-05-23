@@ -255,12 +255,12 @@ def calculate_distance(params):
 	return dist
 
 class GrabUrl(threading.Thread):
-    def __init__(self, arg0):
-        threading.Thread.__init__(self)
-        self.params = arg0
-    def run(self):
-        calculate_distance(self.params)
-        pool.release()
+	def __init__(self, arg0):
+		threading.Thread.__init__(self)
+		self.params = arg0
+	def run(self):
+		calculate_distance(self.params)
+		pool.release()
 
 class Handler(threading.Thread):
 	def run(self):
