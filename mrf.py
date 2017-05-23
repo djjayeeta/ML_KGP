@@ -1,4 +1,3 @@
-from __future__ import print_function
 from scipy import optimize
 import numpy as np
 import pickle,random,math
@@ -19,7 +18,7 @@ class FunctionMinimizer(Annealer):
 		self.alpha = 8
 		self.beta = 4
 		self.data = data
-		self.neighboorhood = 50
+		self.neighboorhood = 16
 		super(FunctionMinimizer, self).__init__(initial_state)
 
 	def move(self):
@@ -33,14 +32,13 @@ class FunctionMinimizer(Annealer):
 
 
 	def calculate_Er_pixel_wise(self,i,j):
-		radius = self.neighboorhood**0.5
+		radius = int(self.neighboorhood**0.5)
 		row_size = self.data.shape[0]
 		col_size = self.data.shape[1]
-		min_row,max_row,min_col,max_col = max(0,int(radius)),min(row_size,int(radius)),max(0,int(radius)),min(col_size,int(radius))
 		pixel_er = 0.0
-		for m in xrange(min_row,max_row):
-			for n in xrange(min_col,max_col):
-				if (i-m)**2 + (j-n)**2 <= self.neighboorhood:
+		for m in xrange(i - radius,i + radius):
+			for n in xrange(j - radius,j + radius):
+				if (m,n) != (i,j) and m>=0 and m < row_size and n >= 0 and n < col_size and (i-m)**2 + (j-n)**2 <= self.neighboorhood :
 					delta = -1 if self.state[m][n] == self.state[i][j] else 1
 					pixel_er += delta
 		return self.beta * pixel_er
@@ -73,8 +71,7 @@ def minimize_energy(mean,std_dev,data,Y):
 	start_time = timeit.default_timer()
 	e = fmin.energy()
 	end_time = timeit.default_timer()
-	print("\t", end_time - start_time)
-	print("\t", e)
+	print  end_time - start_time,e
 	Y_new, e = fmin.anneal()
 	# print()
 	# print("%f function value x:" % e)
@@ -92,6 +89,7 @@ def get_cluster_prototypes(Y,data,cluster_number):
 	mean = np.zeros((cluster_number,channel_count))
 	count_sample = [0 for i in xrange(cluster_number)]
 	std_dev = np.zeros((cluster_number,channel_count))
+
 	for i in xrange(0,row_size):
 		for j in xrange(0,col_size):
 			mean[Y[i][j]] = mean[Y[i][j]] + data[i][j]
