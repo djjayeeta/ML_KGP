@@ -1,4 +1,3 @@
-from scipy import optimize
 import numpy as np
 import pickle,random,math
 from cython.parallel import prange, parallel
@@ -160,7 +159,7 @@ def segment(pickle_data_file,cluster_number,output_path):
 	while(True):
 		#### E step ####
 		mean,std_dev  = get_cluster_prototypes(Y_new,data,cluster_number)
-		ih.save_output(Y_new,{'mean':mean,'std_dev':std_dev},output_path + "_" + str(n) + ".pickle")
+		ih.save_output(Y_new,{'mean':mean,'std_dev':std_dev},output_path + "_" + str(n-1) + ".pickle")
 
 		#### M Step###
 
@@ -168,13 +167,13 @@ def segment(pickle_data_file,cluster_number,output_path):
 		Y_new = minimize_energy(mean,std_dev,data,Y_new)
 
 
-		ih.save_image(Y_new,output_path + "_" + str(n-1) + ".jpeg")
+		ih.save_image(Y_new,output_path + "_" + str(n) + ".jpeg")
 		mean_error = get_segmentation_error(Y,Y_new,data)
 		
 		if mean_error < terminating_mean_error:
 			break
 
 		n += 1
-	ih.save_image(Y_new,output_path + "_" + str(n-1) + ".jpeg")
+	ih.save_image(Y_new,output_path + "_" + str(n) + ".jpeg")
 	return
 
