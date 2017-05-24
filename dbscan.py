@@ -18,7 +18,9 @@ def segment(pickle_file,cluster_number,output_file):
 		col = i%data.shape[1]
 		row = i/data.shape[0]
 		L[row][col] = labels[i]
-	ih.save_image(L,output_file)
+	ih.save_output(L,None,output_file+".pickle")
+	ih.save_image(L,output_file+".jpeg")
+
 
 
 
