@@ -14,10 +14,9 @@ def segment(pickle_file,cluster_number,output_file):
 	n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 	L = [[0 for i in xrange(data.shape[1])] for j in xrange(data.shape[0])]
 	col = 0
-	for i in xrange(len(labels)):
-		col = i%data.shape[1]
-		row = i/data.shape[0]
-		L[row][col] = labels[i]
+	for i in xrange(0,data.shape[0]):
+		for j in xrange(0,data.shape[1]):
+			L[i][j] = labels[i*data.shape[1]+j]
 	ih.save_output(L,None,output_file+".pickle")
 	ih.save_image(L,output_file+".jpeg")
 
