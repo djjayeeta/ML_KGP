@@ -8,7 +8,7 @@ import image_helper as ih
 def segment(pickle_file,cluster_number,output_file):
 	data = ih.get_pickle_object_as_numpy(pickle_file)
 	X = np.array([data[i][j] for i in xrange(data.shape[0]) for j in xrange(data.shape[1])])
-	db = DBSCAN(eps=40, min_samples=10,n_jobs=-1).fit(X)
+	db = DBSCAN(eps=0.1, min_samples=10,n_jobs=8).fit(X)
 	core_samples = db.core_sample_indices_
 	labels = db.labels_
 	n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
