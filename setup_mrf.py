@@ -4,18 +4,14 @@
 # setup(
 #    ext_modules = cythonize("mrf.pyx")
 # )
-
-# setup(
-#     ext_modules = cythonize("asd.pyx")
-# )
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 
 ext_modules=[
-    Extension("ss_fuzzy",
-              ["ss_fuzzy.pyx"],
+    Extension("mrf",
+              ["mrf.pyx"],
               libraries=["m"],
               extra_compile_args = ["-O3", "-ffast-math", "-march=native", "-fopenmp" ],
               extra_link_args=['-fopenmp']
@@ -23,7 +19,7 @@ ext_modules=[
 ]
 
 setup(
-  name = "ss_fuzzy",
+  name = "mrf",
   cmdclass = {"build_ext": build_ext},
   ext_modules = ext_modules
 )

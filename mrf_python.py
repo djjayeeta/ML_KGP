@@ -1,11 +1,11 @@
 from scipy import optimize
 import numpy as np
 import pickle,random,math
-from cython.parallel import prange, parallel
-from cython import boundscheck, wraparound
+# from cython.parallel import prange, parallel
+# from cython import boundscheck, wraparound
 import image_helper as ih
 import timeit
-from simanneal import Annealer
+from jd_simanneal import Annealer
 
 
 class FunctionMinimizer(Annealer):
@@ -44,7 +44,6 @@ class FunctionMinimizer(Annealer):
 		return self.beta * pixel_er
 
 	def calculate_Ef_pixel_wise(self,i,j):
-		channel_count = self.data[2]
 		cluster_no = self.state[i][j]
 		vfunc = np.vectorize(math.log)
 		pixel_ef_arr = ((self.data[i][j] - self.mean[cluster_no])**2) / (2*self.std_dev[cluster_no]**2)
@@ -52,7 +51,7 @@ class FunctionMinimizer(Annealer):
 		pixel_ef_arr = pixel_ef_arr + log_arr
 		return np.sum(pixel_ef_arr) 
 
-
+	
 	def energy(self):
 		"""Calculates the length of the route."""
 		row_size = self.data.shape[0]
@@ -66,7 +65,7 @@ class FunctionMinimizer(Annealer):
 def minimize_energy(mean,std_dev,data,Y):
 	cluster_number = mean.shape[0]
 	fmin = FunctionMinimizer(Y,data,mean,std_dev)
-	fmin.steps = 1000
+	fmin.steps = 10000
 	fmin.copy_strategy = "deepcopy"
 	start_time = timeit.default_timer()
 	e = fmin.energy()
