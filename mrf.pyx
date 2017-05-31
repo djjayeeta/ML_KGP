@@ -2,7 +2,7 @@ import numpy as np
 import pickle,random,math
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
-import helper.image_helper as ih
+from helper import image_helper as ih
 from libc.math cimport log
 import timeit
 from helper.jd_simanneal import Annealer
@@ -174,6 +174,6 @@ def segment(pickle_data_file,cluster_number,output_path):
 			break
 
 		n += 1
-	ih.save_image(Y_new,output_path + "_" + str(n) + ".jpeg")
+	ih.save_output(Y_new,{'mean':mean,'std_dev':std_dev},output_path + "_" + str(n) + ".pickle")
 	return
 

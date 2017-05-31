@@ -3,7 +3,7 @@ from sklearn.cluster import DBSCAN
 from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
-import helper.image_helper as ih
+from helper import image_helper as ih
 
 def segment(pickle_file,cluster_number,output_file):
 	data = ih.get_pickle_object_as_numpy(pickle_file)
