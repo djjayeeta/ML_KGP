@@ -1,0 +1,6 @@
+pip install Cython
+pip install numpy
+pip install Pillow
+pip install GDAL
+pip install sklearn
+brew install https://raw.github.com/osgeo/homebrew-osgeo4mac/master/<formula>.rb

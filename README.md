@@ -1,20 +1,20 @@
 # ML_KGP
-hyperspectral image analysis project - part 2
-run the code using the below command
+Run the commands in requirements.txt to install the requirements
 
-python fuzzy_c_spatial_spectral.py image_file_path
+To cythonize run the command
 
-parameters to tune before running the code
+python setup_seg.py build_ext --inplace
 
-1) cluster_number : No of max clusters
-2) cluster_color : A dictionary for colors of clusters
-3) Epsilon : Halting criteria, difference between 2 iteration
-4) fuzzy_index : fuzziness in clustering
+This will generate mrf.so,mrf.c,ss_fuzzy.so,ss_fuzzy.c
 
-All the parameters are available in fuzzy_c_spatial_spectral.py
+Now to run segmentation on a image you need a .pickle of the image which will have a 3 dimensional numpy array. the 3rd dimension denoting the spectral dimension of the image.
 
-The output will the created in the same folder as input image 
-Ex input image file /a/b/c.jpeg
-output /a/b/c_time/c_1.jpeg,/a/b/c_time/c_2.jpeg,/a/b/c_time/c_3.jpeg ...
+To run segmentaion change the following parameters in run_seg.py
 
-Requirements osgeo,numpy,PIL,multiprocessing,pickle
+1) algo (can be fuzzy_c/mrf/db_scan)
+2) pickle_file (.pickle file for the input image)
+3) cluster_number (no of classes , will be used in fuzzy_c and mrf )
+4) output_file (file to store the output, in case of mrf and fuzzy_c outputs in form of .jpeg and .pickle will be stored for every iteration,for dbscan final output will be stored)
+
+Now run the following command
+python run_seg.py
