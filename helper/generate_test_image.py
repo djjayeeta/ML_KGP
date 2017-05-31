@@ -1,4 +1,4 @@
-import image_helper as ih
+import helper.image_helper as ih
 
 image_path = "data/test_new_image.jpeg"
 row = 100
