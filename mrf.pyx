@@ -2,10 +2,10 @@ import numpy as np
 import pickle,random,math
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
-import image_helper as ih
+import helper.image_helper as ih
 from libc.math cimport log
 import timeit
-from jd_simanneal import Annealer
+from helper.jd_simanneal import Annealer
 
 
 @boundscheck(False)

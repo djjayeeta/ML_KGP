@@ -2,7 +2,7 @@ import numpy as np
 import pickle,random,os,time,random,sys
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
-import image_helper as ih
+import helper.image_helper as ih
 
 @boundscheck(False)
 @wraparound(False)
