@@ -2,7 +2,7 @@ import numpy as np
 import pickle,random,os,time,random,sys
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
-import helper.image_helper as ih
+from helper import image_helper as ih
 
 @boundscheck(False)
 @wraparound(False)
@@ -170,7 +170,7 @@ def segment(pickle_data_file,cluster_number,output_path):
 	n = 1
 	while(True):
 		V = get_cluster_prototypes(U,data,m,cluster_number)
-		ih.save_output(L_new,V,output_path + "_" + str(n) + ".pickle")
+		ih.save_output(L_new,V,output_path + "_" + str(n-1) + ".pickle")
 		D = get_dissimilarity_matrix(U,V,data,n,error_list)
 		update_U(U,D,m)
 		L = L_new
@@ -182,5 +182,6 @@ def segment(pickle_data_file,cluster_number,output_path):
 		if mean_error < terminating_mean_error:
 			break
 		n += 1
+	ih.save_output(L_new,V,output_path + "_" + str(n) + ".pickle")
 	return
 
