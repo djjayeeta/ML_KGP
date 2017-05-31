@@ -24,4 +24,3 @@ def segment(pickle_file,cluster_number,output_file):
 
 
 
-
