@@ -1,7 +1,7 @@
-from helper import image_helper as ih
+import image_helper as ih
 
-image_path = "data/test_new_image.jpeg"
-row = 100
-col = 100
+image_path = "data/test_5050_image.jpeg"
+row = 50
+col = 50
 ih.create_test_image(image_path,row,col)
 ih.save_image_as_pickle(image_path)
