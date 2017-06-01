@@ -181,7 +181,7 @@ class Annealer(object):
         self.step = 0
         while  T > self.eps:
             self.step = 0
-            print T
+            # print T
             for i in xrange(0,self.steps):
                 self.step += 1
                 self.move()
