@@ -1,5 +1,5 @@
-from dbscan import segment
-pickle_file = "data/test_new_image.pickle"
-output_file = "data/dbscan_output"
-cluster_number = 4
-segment(pickle_file,cluster_number,output_file)
+from dbscan import kmeans_segment
+pickle_file = "Indian_pines.pickle"
+output_file = "data/kmeans_output_Indian_pines"
+cluster_number = 16
+kmeans_segment(pickle_file,cluster_number,output_file)

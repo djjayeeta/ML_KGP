@@ -1,9 +1,27 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
 from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
 from helper import image_helper as ih
+
+def kmeans_segment(pickle_file,cluster_number,output_file):
+	data = ih.get_pickle_object_as_numpy(pickle_file)
+	r,channel = data.shape[0]*data.shape[1],data.shape[2]
+	X = np.reshape(data,(r,channel))
+	kmeans = KMeans(n_clusters=cluster_number, random_state=0).fit(X)
+	labels = kmeans.labels_
+	n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+	print n_clusters_
+	L = [[0 for i in xrange(data.shape[1])] for j in xrange(data.shape[0])]
+	col = 0
+	for i in xrange(0,data.shape[0]):
+		for j in xrange(0,data.shape[1]):
+			L[i][j] = labels[i*data.shape[1]+j]
+	ih.save_output(L,None,output_file+"_"+".pickle")
+	ih.save_image(L,output_file+"_"+".jpeg")
+
 
 def segment(pickle_file,cluster_number,output_file):
 	data = ih.get_pickle_object_as_numpy(pickle_file)

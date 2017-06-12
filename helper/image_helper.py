@@ -1,6 +1,10 @@
 from PIL import Image
 import numpy as np
 import pickle
+import scipy
+
+def mat_to_numpy(mat_file_path):
+	mat = scipy.io.loadmat(mat_file_path)
 
 
 def create_test_image(image_path,row,col):
