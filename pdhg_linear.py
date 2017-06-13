@@ -8,7 +8,7 @@ import pickle
 from multiprocessing import Pool
 maxconn = 8
 
-def nonlocal_grad_new(W_sqrt, u):
+def nonlocal_grad(W_sqrt, u):
 	r = u.shape[0]
 	diagu = sparse.lil_matrix((r,r),dtype=np.float64)
 	diagu.setdiag(u)
@@ -18,7 +18,7 @@ def nonlocal_grad_new(W_sqrt, u):
 	return p
 
 
-def nonlocal_divergence_new(W_sqrt,v ):
+def nonlocal_divergence(W_sqrt,v ):
 	temp = W_sqrt.multiply(v)
 	temp = temp - temp.transpose()
 	div = temp.sum(axis=1)
@@ -117,16 +117,16 @@ def get_stop(uhard_old,uhard,r):
 	stop = 1- (np.nonzero(iter_sparse)[0].shape[0])/r
 	return stop
 
-def calculate_cluster_wise(params):
+def calculate_cluster_wise_pdhg(params):
 	u_bar_lth,sigma,tao,W_sqrt,l,r,p_lth,f_lth,u_lth = params[0],params[1],params[2],params[3],params[4],params[5],params[6],params[7],params[8]
-	p_lth = p_lth + nonlocal_grad_new(W_sqrt, sigma*u_bar_lth)
+	p_lth = p_lth + nonlocal_grad(W_sqrt, sigma*u_bar_lth)
 	p_lth = project_p(p_lth,r)
-	u_lth = u_lth + nonlocal_divergence_new(W_sqrt, tao*p_lth) - tao*f_lth
+	u_lth = u_lth + nonlocal_divergence(W_sqrt, tao*p_lth) - tao*f_lth
 	# print u_lth.shape
 	return [p_lth,u_lth]
 
 
-def pd_nonlocal_HSI_stop_new(image,W,mu,endmem,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path):
+def pd_nonlocal_HSI(image,W,mu,endmem,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path):
 	image = image.astype(dtype=np.float64)
 	m,n,channel = image.shape
 	channel,cluster_no = endmem.shape
@@ -158,11 +158,11 @@ def pd_nonlocal_HSI_stop_new(image,W,mu,endmem,lamda,tao,sigma,theta,tol,iter_st
 			for l in xrange(0,cluster_no):
 				data_inputs[l] = [u_bar[:,l],sigma,tao,W_sqrt,l,r,p[l],f[:,l],u[:,l]]
 			# for l in xrange(0,cluster_no):
-			# 	p[l] = p[l] + nonlocal_grad_new(W_sqrt, sigma*u_bar[:,l])
+			# 	p[l] = p[l] + nonlocal_grad(W_sqrt, sigma*u_bar[:,l])
 			# 	p[l] = project_p(p[l],r)
-			# 	u[:,l] = u[:,l] + nonlocal_divergence_new(W_sqrt, tao*p[l]) - tao*f[:,l]
+			# 	u[:,l] = u[:,l] + nonlocal_divergence(W_sqrt, tao*p[l]) - tao*f[:,l]
 			pool = Pool(maxconn) # on 4 processors
-			outputs = pool.map(calculate_cluster_wise, data_inputs)
+			outputs = pool.map(calculate_cluster_wise_pdhg, data_inputs)
 			pool.close()
 			pool.join()
 			# print outputs

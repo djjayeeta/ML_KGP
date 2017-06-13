@@ -25,3 +25,6 @@ parallel.py
 policy.txt
 readme.txt
 worker.py
+u1_accelerated_public*
+lda_indian_pines.py
+scipy_parse.py
