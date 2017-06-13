@@ -6,23 +6,23 @@ import scipy.io
 import timeit
 
 
-def get_cluster_centroids(data):
+def get_cluster_centroids(data,cluster_number):
 	r,channel = data.shape[0]*data.shape[1],data.shape[2]
 	X = np.reshape(data,(r,channel))
 	kmeans = KMeans(n_clusters=cluster_number, random_state=0).fit(X)
 	return kmeans.cluster_centers_.transpose()
 	
-def create_weight_centroid_mat_file(image,output_path):
+def create_weight_centroid_mat_file(image,output_path,cluster_number):
 	W = weights_HSI(image)
-	endmem_rand = get_cluster_centroids(image)
+	endmem_rand = get_cluster_centroids(image,cluster_number)
 	scipy.io.savemat(output_path+".mat",{'W_binary_10':W,'H':image,'endmem_rand':endmem_rand})
 	return W,endmem_rand
 
-def run_linear_pdhg(mat_file_path,create_weight,output_path):
+def run_linear_pdhg(mat_file_path,create_weight,output_path,cluster_number):
 	mat = scipy.io.loadmat(mat_file_path)
 	image = mat['H']
 	if create_weight:
-		W,endmem_rand = create_weight_centroid_mat_file(image,output_path+"_data")
+		W,endmem_rand = create_weight_centroid_mat_file(image,output_path+"_data",cluster_number)
 	else:
 		W = mat['W_binary_10']
 		endmem_rand = mat['endmem_rand']
@@ -61,6 +61,7 @@ def local_run():
 	error = pd_nonlocal_HSI(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
 	
 start_time = timeit.default_timer()
-error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_")
+cluster_number = 6
+error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_",cluster_number)
 print (timeit.default_timer() - start_time),"total execution time"
 print error
