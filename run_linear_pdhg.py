@@ -3,6 +3,7 @@ from make_weight import weights_HSI
 import numpy as np
 from sklearn.cluster import KMeans
 import scipy.io
+import timeit
 
 
 def get_cluster_centroids(data):
@@ -36,7 +37,7 @@ def run_linear_pdhg(mat_file_path,create_weight,output_path):
 	innerloop = 5
 	outerloop = 50
 	error = pd_nonlocal_HSI(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
-
+	return error
 
 def local_run():
 	mat_file_path = "data_urban.mat"
@@ -58,5 +59,8 @@ def local_run():
 	endmem = endmem_rand
 	image = f
 	error = pd_nonlocal_HSI(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
-		
-run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_")
+	
+start_time = timeit.default_timer()
+error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_")
+print (timeit.default_timer() - start_time),"total execution time"
+print error
