@@ -18,11 +18,12 @@ def create_weight_centroid_mat_file(image,output_path,cluster_number):
 	scipy.io.savemat(output_path+".mat",{'W_binary_10':W,'H':image,'endmem_rand':endmem_rand})
 	return W,endmem_rand
 
-def run_linear_pdhg(mat_file_path,create_weight,output_path,cluster_number):
+def run_linear_pdhg(mat_file_path,create_weight,output_path,cluster_number,start_time):
 	mat = scipy.io.loadmat(mat_file_path)
 	image = mat['H']
 	if create_weight:
 		W,endmem_rand = create_weight_centroid_mat_file(image,output_path+"_data",cluster_number)
+		print (timeit.default_timer() - start_time),"weight execution time"
 	else:
 		W = mat['W_binary_10']
 		endmem_rand = mat['endmem_rand']
@@ -36,7 +37,7 @@ def run_linear_pdhg(mat_file_path,create_weight,output_path,cluster_number):
 	iter_stop = 1.1
 	innerloop = 5
 	outerloop = 50
-	error = pd_nonlocal_HSI(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
+	error = pd_nonlocal_HSI(image,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
 	return error
 
 def local_run():
@@ -62,6 +63,6 @@ def local_run():
 	
 start_time = timeit.default_timer()
 cluster_number = 6
-error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_",cluster_number)
+error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_",cluster_number,start_time)
 print (timeit.default_timer() - start_time),"total execution time"
 print error
