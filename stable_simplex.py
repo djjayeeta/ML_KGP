@@ -62,7 +62,7 @@ def threshold_u(x):
 		idx = (np.sum(temp[0:j,:],axis=0)).astype(dtype=np.bool)
 		temp[j,idx] = 0
 	thres = np.argmax(temp)
-	outhard = np.zeros((n,m))i
+	outhard = np.zeros((n,m))
 	for i in xrange(0,m):
 		idx = (thres==i)
 		outhard[idx,i] = 1
@@ -120,7 +120,6 @@ def fdelta_inner_func(A,mid,thres1,thres2,thres1_2nd,thres2_2nd):
 def splx_edge_proj_multi(x):
 	if len(x.shape) == 1:
 		x = np.reshape(x,(x.shape[0],1))
-	m,n
 	n,m = x.shape
 	A = np.zeros((n*m,n))
 	for i in xrange(0,n):
