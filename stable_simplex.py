@@ -61,7 +61,7 @@ def threshold_u(x):
 	for j in xrange(1,m):
 		idx = (np.sum(temp[0:j,:],axis=0)).astype(dtype=np.bool)
 		temp[j,idx] = 0
-	thres = np.argmax(temp)
+	thres = np.argmax(temp,axis=0)
 	outhard = np.zeros((n,m))
 	for i in xrange(0,m):
 		idx = (thres==i)
