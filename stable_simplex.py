@@ -104,25 +104,32 @@ def fdelta_inner_func(A,mid,thres1,thres2,thres1_2nd,thres2_2nd):
 	mn = A_new.shape[1]
 	m = mid_new.shape[1]
 	n = mn / m
+	mid_new = np.matlib.repmat(mid_new,1,n)
+
 	result = np.zeros(mn)
 	result_2nd = np.zeros(mn)
-	A_pos , mid_pos = 0 , 0
+	
+	temp = (A_new - mid_new)
+	temp_result = np.sum((temp>=thres1),axis=0)
+	temp_result_2nd = np.sum((temp>=thres1_2nd),axis=0)
 
-	for j in xrange(0,m):
-		mid_pos_temp = mid_pos
-		for i in xrange(0,mn):
-			A_pos_row,A_pos_col = A_pos/mn,A_pos%mn
-			mid_pos_temp_row,mid_pos_temp_col = mid_pos_temp/m,mid_pos_temp%m
-			temp = A_new[A_pos_row][A_pos_col] - mid_new[mid_pos_temp_row][mid_pos_temp_col]
-			if temp >= thres1:
-				result[i] += 1.0
-			if temp >= thres1_2nd:
-				result_2nd[i] += 1.0
-			mid_pos_temp += 1
-			if mid_pos_temp == (mid_pos+m):
-				mid_pos_temp = mid_pos
-			A_pos += 1
-		mid_pos += m
+	# A_pos , mid_pos = 0 , 0
+
+	# for j in xrange(0,m):
+	# 	mid_pos_temp = mid_pos
+	# 	for i in xrange(0,mn):
+	# 		A_pos_row,A_pos_col = A_pos/mn,A_pos%mn
+	# 		mid_pos_temp_row,mid_pos_temp_col = mid_pos_temp/m,mid_pos_temp%m
+	# 		temp = A_new[A_pos_row][A_pos_col] - mid_new[mid_pos_temp_row][mid_pos_temp_col]
+	# 		if temp >= thres1:
+	# 			result[i] += 1.0
+	# 		if temp >= thres1_2nd:
+	# 			result_2nd[i] += 1.0
+	# 		mid_pos_temp += 1
+	# 		if mid_pos_temp == (mid_pos+m):
+	# 			mid_pos_temp = mid_pos
+	# 		A_pos += 1
+	# 	mid_pos += m
 	# mn = A.shape[0] # 6r
 	# m = mid.shape[0] # 6
 	# n = mn / m #r
@@ -144,15 +151,17 @@ def fdelta_inner_func(A,mid,thres1,thres2,thres1_2nd,thres2_2nd):
 	# 			mid_pos_temp = mid_pos
 	# 		A_pos += 1
 	# 	mid_pos += m
-	for i in xrange(0,mn):
-		if result[i] >= thres2:
-			result[i] = 1.0
-		else:
-			result[i] = 0.0
-		if result_2nd[i] >= thres2_2nd:
-			result_2nd[i] = 1.0
-		else:
-			result_2nd[i] = 0.0
+	result[temp_result >= thres2] = 1.0
+	result_2nd[temp_result_2nd >= thres2_2nd] = 1.0
+	# for i in xrange(0,mn):
+	# 	if result[i] >= thres2:
+	# 		result[i] = 1.0
+	# 	else:
+	# 		result[i] = 0.0
+	# 	if result_2nd[i] >= thres2_2nd:
+	# 		result_2nd[i] = 1.0
+	# 	else:
+	# 		result_2nd[i] = 0.0
 	return result,result_2nd
 
 
