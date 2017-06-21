@@ -2,6 +2,7 @@ import numpy as np
 import scipy.io
 from scipy import sparse
 from scipy import signal
+# np.seterr(divide='ignore', invalid='ignore')
 
 def gaussian_filter(shape =(5,5), sigma=1):
     x, y = [edge /2 for edge in shape]
@@ -28,11 +29,12 @@ def weights_HSI(f):
 	for i in xrange(-ws,ws+1):
 		for j in xrange(-ws,ws+1):
 			pad_width = ((ws-i,ws+i),(ws-j,ws+j),(0,0))
-			shiftpadu = np.pad(f,pad_width=pad_width,mode='symmetric',reflect_type='even') 
-			temp1 = np.multiply(padu, shiftpadu).sum(axis=2)
-			temp2 = np.multiply(((padu**2).sum(axis=2))**0.5, ((shiftpadu**2).sum(axis=2))**0.5)
-			tempu = 1 - np.divide(temp1,temp2) + mu * (((padu-shiftpadu)**2).sum(axis=2))**0.5
-			padtempu = tempu[ws-ps:m+ws+ps-1, ws-ps:n+ws+ps-1]
+			shiftpadu = np.lib.pad(f,pad_width=pad_width,mode='symmetric',reflect_type='even') 
+			temp1 = (padu*shiftpadu).sum(axis=2)
+			temp2 = (((padu**2).sum(axis=2))**0.5) *(((shiftpadu**2).sum(axis=2))**0.5)
+			# print temp2
+			tempu = 1 - temp1/temp2 + mu * (((padu-shiftpadu)**2).sum(axis=2)**0.5)
+			padtempu = tempu[ws-ps:m+ws+ps, ws-ps:n+ws+ps]
 			uu = signal.convolve2d(padtempu**2,G,'same')
 			uu = uu[ps:m+ps, ps:n+ps]
 			k = (j+ws)*(2*ws+1)+i+ws
