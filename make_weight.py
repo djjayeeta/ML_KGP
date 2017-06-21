@@ -12,6 +12,7 @@ def gaussian_filter(shape =(5,5), sigma=1):
     return g_filter
 
 def weights_HSI(f):
+	f = f.astype(dtype=np.float64)
 	ms = 10
 	ws = 10 # half of search window
 	ps = 1 # half of patch size
@@ -29,7 +30,7 @@ def weights_HSI(f):
 	for i in xrange(-ws,ws+1):
 		for j in xrange(-ws,ws+1):
 			pad_width = ((ws-i,ws+i),(ws-j,ws+j),(0,0))
-			shiftpadu = np.lib.pad(f,pad_width=pad_width,mode='symmetric',reflect_type='even') 
+			shiftpadu = np.lib.pad(f,pad_width=pad_width,mode='symmetric',reflect_type='even')  
 			temp1 = (padu*shiftpadu).sum(axis=2)
 			temp2 = (((padu**2).sum(axis=2))**0.5) *(((shiftpadu**2).sum(axis=2))**0.5)
 			# print temp2
