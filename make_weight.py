@@ -41,6 +41,7 @@ def weights_HSI(f):
 			dist[k,:] = np.reshape(uu, (1,r), order='F')[0]
 	W = sparse.csr_matrix((r,r),dtype=np.float64)
 	idx = np.arange(0,r)
+	dist[~np.isfinite(dist)] = np.inf
 	dist[dist<1e-13] = 1e+5
 	# print 'calucalting W'
 	for i in xrange(0,ms):
