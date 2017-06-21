@@ -83,27 +83,51 @@ def calculate_fdel_pointwise(params):
 
 
 def fdelta_inner_func(A,mid,thres1,thres2,thres1_2nd,thres2_2nd):
-	mn = A.shape[0] # 6r
-	m = mid.shape[0] # 6
-	n = mn / m #r
-	result = np.zeros((mn, 1))
-	result_2nd = np.zeros((mn, 1))
+	A_new = A.transpose()
+	mid_new = mid.transpose()
+	mn = A_new.shape[1]
+	m = mid_new.shape[1]
+	n = mn / m
+	result = np.zeros(mn)
+	result_2nd = np.zeros(mn)
 	A_pos , mid_pos = 0 , 0
+
 	for j in xrange(0,m):
 		mid_pos_temp = mid_pos
 		for i in xrange(0,mn):
-			A_pos_row,A_pos_col = A_pos%mn,A_pos/mn
-			mid_pos_temp_row,mid_pos_temp_col = mid_pos_temp%m,mid_pos_temp/m
-			temp = A[A_pos_row][A_pos_col] - mid[mid_pos_temp_row][mid_pos_temp_col]
-			if (temp >= thres1):
+			A_pos_row,A_pos_col = A_pos/mn,A_pos%mn
+			mid_pos_temp_row,mid_pos_temp_col = mid_pos_temp/m,mid_pos_temp%m
+			temp = A_new[A_pos_row][A_pos_col] - mid_new[mid_pos_temp_row][mid_pos_temp_col]
+			if temp >= thres1:
 				result[i] += 1.0
-			if (temp >= thres1_2nd):
+			if temp >= thres1_2nd:
 				result_2nd[i] += 1.0
 			mid_pos_temp += 1
 			if mid_pos_temp == (mid_pos+m):
 				mid_pos_temp = mid_pos
 			A_pos += 1
 		mid_pos += m
+	# mn = A.shape[0] # 6r
+	# m = mid.shape[0] # 6
+	# n = mn / m #r
+	# result = np.zeros((mn, 1))
+	# result_2nd = np.zeros((mn, 1))
+	# A_pos , mid_pos = 0 , 0
+	# for j in xrange(0,m):
+	# 	mid_pos_temp = mid_pos
+	# 	for i in xrange(0,mn):
+	# 		A_pos_row,A_pos_col = A_pos%mn,A_pos/mn
+	# 		mid_pos_temp_row,mid_pos_temp_col = mid_pos_temp%m,mid_pos_temp/m
+	# 		temp = A[A_pos_row][A_pos_col] - mid[mid_pos_temp_row][mid_pos_temp_col]
+	# 		if (temp >= thres1):
+	# 			result[i] += 1.0
+	# 		if (temp >= thres1_2nd):
+	# 			result_2nd[i] += 1.0
+	# 		mid_pos_temp += 1
+	# 		if mid_pos_temp == (mid_pos+m):
+	# 			mid_pos_temp = mid_pos
+	# 		A_pos += 1
+	# 	mid_pos += m
 	for i in xrange(0,mn):
 		if result[i] >= thres2:
 			result[i] = 1.0
