@@ -37,19 +37,19 @@ def threshold_u(x):
 	outputs = pool.map(calculate_fdel_pointwise, data_inputs)
 	pool.close()
 	pool.join()
-	splx_edge_proj_multi_avg_time = 0.0
-	fdelta_inner_func_avg_time = 0.0
-	rest_avg_time = 0.0
+	# splx_edge_proj_multi_avg_time = 0.0
+	# fdelta_inner_func_avg_time = 0.0
+	# rest_avg_time = 0.0
 	for i in xrange(0,ngrid):
 		l_th_out = outputs[i]
 		fdel[:,i] = l_th_out[0]
 		finter[i] = l_th_out[1]
-		splx_edge_proj_multi_avg_time += l_th_out[2]
-		fdelta_inner_func_avg_time += l_th_out[3]
-		rest_avg_time += l_th_out[4]	
-	print splx_edge_proj_multi_avg_time/ngrid,'splx_edge_proj_multi_avg_time'
-	print fdelta_inner_func_avg_time/ngrid,'fdelta_inner_func_avg_time'
-	print rest_avg_time/ngrid,'rest_avg_time'
+		# splx_edge_proj_multi_avg_time += l_th_out[2]
+		# fdelta_inner_func_avg_time += l_th_out[3]
+		# rest_avg_time += l_th_out[4]	
+	# print splx_edge_proj_multi_avg_time/ngrid,'splx_edge_proj_multi_avg_time'
+	# print fdelta_inner_func_avg_time/ngrid,'fdelta_inner_func_avg_time'
+	# print rest_avg_time/ngrid,'rest_avg_time'
 	# for i in xrange(0,ngrid):
 	# 	mid = splx_edge_proj_multi(delta[:,i])
 	# 	temp,temp_2nd = fdelta_inner_func(A, mid, 0, m, gs, m-1)
@@ -80,21 +80,22 @@ def threshold_u(x):
 
 def calculate_fdel_pointwise(params):
 	A,delta_i,m,gs,n,i = params[0],params[1],params[2],params[3],params[4],params[5]
-	start_time = timeit.default_timer()
-	print i,'calculate_fdel_pointwise'
+	# start_time = timeit.default_timer()
+	# print i,'calculate_fdel_pointwise'
 	mid = splx_edge_proj_multi(delta_i)
-	splx_edge_proj_multi_time = (timeit.default_timer() - start_time)
-	start_time = timeit.default_timer()
+	# splx_edge_proj_multi_time = (timeit.default_timer() - start_time)
+	# start_time = timeit.default_timer()
 	temp,temp_2nd = fdelta_inner_func(A, mid, 0, m, gs, m-1)
-	fdelta_inner_func_time = (timeit.default_timer() - start_time)
-	start_time = timeit.default_timer()
+	# fdelta_inner_func_time = (timeit.default_timer() - start_time)
+	# start_time = timeit.default_timer()
 	temp2 = np.reshape(temp,(m,n),order='F')
 	cluster = np.argmax(temp2,axis=0)
 	temp2 = np.bincount(cluster,minlength=m)
 	fdel_i = temp2 / float(n)
 	finter_i = 1 - np.sum(temp_2nd,axis=0)/ float(n)
-	rest_time = (timeit.default_timer() - start_time)
-	return [fdel_i,finter_i,splx_edge_proj_multi_time,fdelta_inner_func_time,rest_time]
+	# rest_time = (timeit.default_timer() - start_time)
+	return [fdel_i,finter_i]
+	# return [fdel_i,finter_i,splx_edge_proj_multi_time,fdelta_inner_func_time,rest_time]
 
 
 
