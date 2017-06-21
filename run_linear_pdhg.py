@@ -1,4 +1,5 @@
-from pdhg_linear import pd_nonlocal_HSI
+from pdhg_linear import pd_nonlocal_HSI as pd_nonlocal_HSI_linear
+from pdhg_quadratic import pd_nonlocal_HSI as pd_nonlocal_HSI_quad
 from make_weight import weights_HSI
 import numpy as np
 from sklearn.cluster import KMeans
@@ -33,11 +34,11 @@ def run_linear_pdhg(mat_file_path,create_weight,output_path,cluster_number,start
 	sigma = 1.0/tao/4.0/10.0
 	sigma = sigma/3
 	theta = 1
-	tol = 1e-2
+	tol = -1e-2
 	iter_stop = 1.1
-	innerloop = 5
-	outerloop = 50
-	error = pd_nonlocal_HSI(image,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
+	innerloop = 10
+	outerloop = 10
+	error = pd_nonlocal_HSI_quad(image,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
 	return error
 
 def local_run():
@@ -63,6 +64,6 @@ def local_run():
 	
 start_time = timeit.default_timer()
 cluster_number = 6
-error = run_linear_pdhg("data_urban.mat",True,"data/linear_hybrid_output_",cluster_number,start_time)
+error = run_linear_pdhg("sunderban_image.mat",True,"data/qaud_pdhg_sunderban_output_",cluster_number,start_time)
 print (timeit.default_timer() - start_time),"total execution time"
 print error
