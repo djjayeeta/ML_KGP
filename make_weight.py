@@ -3,6 +3,13 @@ import scipy.io
 from scipy import sparse
 from scipy import signal
 
+def gaussian_filter(shape =(5,5), sigma=1):
+    x, y = [edge /2 for edge in shape]
+    grid = np.array([[((i**2+j**2)/(2.0*sigma**2)) for i in xrange(-x, x+1)] for j in xrange(-y, y+1)])
+    g_filter = np.exp(-grid)/(2*np.pi*sigma**2)
+    g_filter /= np.sum(g_filter)
+    return g_filter
+
 def weights_HSI(f):
 	ms = 10
 	ws = 10 # half of search window
@@ -13,7 +20,8 @@ def weights_HSI(f):
 	mu = 0 # cosine distance weight
 	m, n, channel = f.shape
 	r = m*n
-	G = (signal.gaussian((2*ps+1)**2, std=sigma)).reshape(2*ps+1,2*ps+1)
+	G = gaussian_filter(shape=(2*ps+1,2*ps+1),sigma=sigma)
+	# G = (signal.gaussian((2*ps+1)**2, std=sigma)).reshape(2*ps+1,2*ps+1)
 	dist = np.zeros(((2*ws+1)*(2*ws+1), r))
 	pad_width = ((ws,ws),(ws,ws),(0,0))
 	padu = np.lib.pad(f,pad_width=pad_width,mode='symmetric',reflect_type='even')
