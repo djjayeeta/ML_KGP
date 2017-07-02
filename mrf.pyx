@@ -103,7 +103,7 @@ def get_initial_seg(row_size,col_size, cluster_number,data):
 	r,channel = row_size*col_size,data.shape[2]
 	X = np.reshape(data,(r,channel))
 	kmeans_res = kmeans(X,cluster_number)
-	V = kmeans_res[0].astype(dtype=np.float64).transpose()
+	V = kmeans_res[0].astype(dtype=np.float64)
 	Y = np.random.randint(cluster_number,size=(row_size,col_size))
 	for i in xrange(0,row_size):
 		for j in xrange(0,col_size):
