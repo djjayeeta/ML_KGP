@@ -20,5 +20,5 @@ output_path = "data/quad_hybrid_output_"
 # endmem = endmem_rand
 # image = f
 start_time = timeit.default_timer()
-error = pd_nonlocal_HSI_stop_new(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
+error = pd_nonlocal_HSI(f,W,mu,endmem_rand,lamda,tao,sigma,theta,tol,iter_stop,innerloop,outerloop,output_path)
 print(timeit.default_timer() - start_time),"total execution time"

@@ -158,7 +158,7 @@ def pd_nonlocal_HSI(image,W,mu,endmem,lamda,tao,sigma,theta,tol,iter_stop,innerl
 		uhard = threshold_u(u.transpose())
 		print(timeit.default_timer() - start_time),"threshold_u execution time"
 		endmem = calculate_centroid(uhard,cluster_no,endmem,image_2d)
-		print outer_index
+		print outer_index,'outer_index'
 		L = assing_classes(uhard,m,n)
 		ih.save_image(L,output_path + "_" + str(outer_index) + ".jpeg")
 		stop = get_stop(uhard_old,uhard,r)
