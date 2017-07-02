@@ -1,11 +1,13 @@
 import numpy as np
 import pickle,random,math
+import numpy.matlib
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
 from helper import image_helper as ih
 from libc.math cimport log
 import timeit
 from helper.modified_simanneal import Annealer
+from scipy.cluster.vq import vq, kmeans, whiten
 
 
 @boundscheck(False)
@@ -138,8 +140,20 @@ def minimize_energy(mean,std_dev,data,Y):
 	# print("\t", Y_new)
 	return Y_new
 
-def get_initial_seg(row_size,col_size, cluster_number):
+def get_initial_seg(row_size,col_size, cluster_number,data):
+	r,channel = row_size*col_size,data.shape[2]
+	X = np.reshape(data,(r,channel))
+	kmeans_res = kmeans(X,cluster_number)
+	V = kmeans_res[0].astype(dtype=np.float64)
 	Y = np.random.randint(cluster_number,size=(row_size,col_size))
+	for i in xrange(0,row_size):
+		for j in xrange(0,col_size):
+			z = (((np.matlib.repmat(data[i][j],cluster_number,1) - V)**2).sum(axis=1)) ** 0.5
+			z = z/np.sum(z)
+			z_exp = [math.exp(-k) for k in z]  
+			sum_z_exp = sum(z_exp)  
+			softmax = [round(k / sum_z_exp, 3) for k in z_exp]
+			Y[i][j] = np.argmax(np.array(softmax))
 	return Y
 
 def get_cluster_prototypes(Y,data,cluster_number):
@@ -191,7 +205,7 @@ def segment(pickle_data_file,cluster_number,output_path):
 
 
 	##### initializing ###########
-	Y_new = get_initial_seg(row_size,col_size,cluster_number)
+	Y_new = get_initial_seg(row_size,col_size,cluster_number,data)
 	ih.save_image(Y_new,output_path + "_" + str(0) + ".jpeg")
 
 	##### starting iterations ####

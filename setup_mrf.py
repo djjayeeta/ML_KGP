@@ -10,8 +10,8 @@ from Cython.Distutils import build_ext
 
 
 ext_modules=[
-    Extension("mrf",
-              ["mrf.pyx"],
+    Extension("mrf_new_simaneal",
+              ["mrf_new_simaneal.pyx"],
               libraries=["m"],
               extra_compile_args = ["-O3", "-ffast-math", "-march=native", "-fopenmp" ],
               extra_link_args=['-fopenmp']
@@ -19,7 +19,7 @@ ext_modules=[
 ]
 
 setup(
-  name = "mrf",
+  name = "mrf_new_simaneal",
   cmdclass = {"build_ext": build_ext},
   ext_modules = ext_modules
 )
