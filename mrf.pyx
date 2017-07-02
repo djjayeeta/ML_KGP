@@ -1,5 +1,6 @@
 import numpy as np
 import pickle,random,math
+import numpy.matlib
 from cython.parallel import prange, parallel
 from cython import boundscheck, wraparound
 from helper import image_helper as ih
