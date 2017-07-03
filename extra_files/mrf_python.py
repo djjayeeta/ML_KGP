@@ -6,6 +6,7 @@ from helper import image_helper as ih
 import timeit,math
 from helper.jd_simanneal import Annealer
 from scipy.cluster.vq import vq, kmeans, whiten
+# np.seterr(divide='ignore', invalid='ignore')
 
 class FunctionMinimizer(Annealer):
 	def __init__(self, initial_state,data,mean,std_dev):
@@ -45,7 +46,9 @@ class FunctionMinimizer(Annealer):
 	def calculate_Ef_pixel_wise(self,i,j):
 		cluster_no = self.state[i][j]
 		vfunc = np.vectorize(math.log)
-		pixel_ef_arr = ((self.data[i][j] - self.mean[cluster_no])**2) / (2*self.std_dev[cluster_no]**2)
+		std_dev = 2*self.std_dev[cluster_no]**2
+		std_dev[std_dev==0] = 1
+		pixel_ef_arr = ((self.data[i][j] - self.mean[cluster_no])**2) / std_dev
 		log_arr = vfunc((2*math.pi)**0.5*self.std_dev[cluster_no])
 		pixel_ef_arr = pixel_ef_arr + log_arr
 		return np.sum(pixel_ef_arr) 
@@ -106,16 +109,18 @@ def get_cluster_prototypes(Y,data,cluster_number):
 			count_sample[Y[i][j]] += 1
 
 	for i in xrange(0,cluster_number):
-		mean[i] = mean[i]/count_sample[i]
+		if count_sample[i] != 0:
+			mean[i] = mean[i]/count_sample[i]
 
 	for i in xrange(0,row_size):
 		for j in xrange(0,col_size):
 			std_dev[Y[i][j]] = std_dev[Y[i][j]] + ((data[i][j] - mean[Y[i][j]])**2)
 
 	for i in xrange(0,cluster_number):
-		std_dev[i] = (std_dev[i]/(count_sample[i]-1))**0.5
-	print std_dev[~np.isfinite(std_dev)]
-	print mean[~np.isfinite(mean)]
+		if count_sample[i]-1!=0:
+			std_dev[i] = (std_dev[i]/(count_sample[i]-1))**0.5
+	# print std_dev[~np.isfinite(std_dev)]
+	# print mean[~np.isfinite(mean)]
 
 	return mean,std_dev
 
