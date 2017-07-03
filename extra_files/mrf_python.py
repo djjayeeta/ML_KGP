@@ -1,6 +1,6 @@
 from scipy import optimize
 import numpy as np
-import random,math
+import random,math,sys
 import numpy.matlib
 from helper import image_helper as ih
 import timeit,math
@@ -49,7 +49,9 @@ class FunctionMinimizer(Annealer):
 		std_dev = 2*self.std_dev[cluster_no]**2
 		std_dev[std_dev==0] = 1
 		pixel_ef_arr = ((self.data[i][j] - self.mean[cluster_no])**2) / std_dev
-		log_arr = vfunc((2*math.pi)**0.5*self.std_dev[cluster_no])
+		log_std_dev = (2*math.pi)**0.5*self.std_dev[cluster_no]
+		log_std_dev[log_std_dev<=0] = sys.float_info.min
+		log_arr = vfunc(log_std_dev)
 		pixel_ef_arr = pixel_ef_arr + log_arr
 		return np.sum(pixel_ef_arr) 
 
@@ -99,9 +101,9 @@ def get_cluster_prototypes(Y,data,cluster_number):
 	row_size = data.shape[0]
 	col_size = data.shape[1]
 	channel_count = data.shape[2]
-	mean = np.zeros((cluster_number,channel_count))
+	mean = np.zeros((cluster_number,channel_count),dtype=np.float64)
 	count_sample = [0 for i in xrange(cluster_number)]
-	std_dev = np.zeros((cluster_number,channel_count))
+	std_dev = np.zeros((cluster_number,channel_count),dtype=np.float64)
 
 	for i in xrange(0,row_size):
 		for j in xrange(0,col_size):
