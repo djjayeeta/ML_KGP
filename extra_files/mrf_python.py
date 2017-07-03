@@ -114,6 +114,8 @@ def get_cluster_prototypes(Y,data,cluster_number):
 
 	for i in xrange(0,cluster_number):
 		std_dev[i] = (std_dev[i]/(count_sample[i]-1))**0.5
+	print std_dev[~np.isfinite(std_dev)]
+	print mean[~np.isfinite(mean)]
 
 	return mean,std_dev
 
