@@ -184,7 +184,7 @@ class Annealer(object):
         start_time = timeit.default_timer()
         self.step = 0
         while self.step < self.steps and not self.user_exit:
-            if self.step%100 == 0:
+            if self.step%10 == 0:
                 end_time = timeit.default_timer()
                 print self.step,end_time - start_time
                 start_time = end_time
