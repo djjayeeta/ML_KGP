@@ -69,7 +69,7 @@ class FunctionMinimizer(Annealer):
 def minimize_energy(mean,std_dev,data,Y):
 	cluster_number = mean.shape[0]
 	fmin = FunctionMinimizer(Y,data,mean,std_dev)
-	fmin.steps = 10000
+	fmin.steps = 1000
 	fmin.copy_strategy = "deepcopy"
 	start_time = timeit.default_timer()
 	e = fmin.energy()
